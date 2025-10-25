@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>申請權限記錄系統</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 400px;
+            padding: 20px;
+            border-right: 1px solid #eaeaea;
+        }
+        
+        .records-section {
+            flex: 1;
+            min-width: 400px;
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2a5298;
+            color: #1e3c72;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #2a5298;
+            outline: none;
+            box-shadow: 0 0 5px rgba(42, 82, 152, 0.3);
+        }
+        
+        .checkbox-group {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eaeaea;
+            padding: 15px;
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .checkbox-item input {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        button {
+            background-color: #2a5298;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #1e3c72;
+        }
+        
+        .btn-export {
+            background-color: #28a745;
+        }
+        
+        .btn-export:hover {
+            background-color: #218838;
+        }
+        
+        .management-section {
+            margin-top: 30px;
+            border-top: 1px solid #eaeaea;
+            padding-top: 20px;
+        }
+        
+        .management-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .management-controls input {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .records-list {
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #eaeaea;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .record-item {
+            padding: 15px;
+            border-bottom: 1px solid #eaeaea;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        .record-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .record-details {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+        }
+        
+        .no-border {
+            border: none;
+        }
+        
+        .search-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f4f8;
+            border-radius: 5px;
+        }
+        
+        .search-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-controls input {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .employee-summary {
+            background-color: #e8f4fd;
+            border-left: 4px solid #2a5298;
+        }
+        
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .summary-details {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .application-count {
+            background-color: #2a5298;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 95%;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .checkbox-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .form-section, .records-section {
+                border-right: none;
+                border-bottom: 1px solid #eaeaea;
+            }
+            
+            .search-controls, .export-controls {
+                flex-direction: column;
+            }
+            
+            .search-controls input, .export-controls select {
+                width: 100%;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>申請權限記錄系統</h1>
+            <p class="subtitle">權限申請與管理平台</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="form-section">
+                <h2 class="section-title">申請表單</h2>
+                
+                <div class="form-group">
+                    <label for="employeeId">工號</label>
+                    <input type="text" id="employeeId" placeholder="請輸入您的工號">
+                </div>
+                
+                <div class="form-group">
+                    <label for="applicationNo">申請單號</label>
+                    <input type="text" id="applicationNo" placeholder="請輸入申請單號">
+                </div>
+                
+                <div class="form-group">
+                    <label for="applicationType">申請單類型</label>
+                    <select id="applicationType">
+                        <option value="">-- 請選擇申請單類型 --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>申請項目</label>
+                    <div class="checkbox-group" id="applicationItems">
+                        <!-- 動態生成的申請項目 -->
+                    </div>
+                </div>
+                
+                <button id="submitBtn">提交申請</button>
+            </div>
+            
+            <div class="records-section">
+                <h2 class="section-title">申請記錄</h2>
+                
+                <div class="search-section">
+                    <div class="search-controls">
+                        <input type="text" id="searchInput" placeholder="搜尋工號、申請單號或申請類型">
+                        <button id="searchBtn">搜尋</button>
+                        <button id="clearSearchBtn">清除搜尋</button>
+                        
+                        <div class="export-controls">
+                            <select id="exportType">
+                                <option value="all">匯出所有記錄</option>
+                                <option value="search">匯出搜尋結果</option>
+                                <option value="lastMonth">匯出最近一個月記錄</option>
+                            </select>
+                            <button id="exportBtn" class="btn-export">匯出為Excel</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <input type="checkbox" id="groupByEmployee">
+                        <label for="groupByEmployee">按工號分組顯示</label>
+                    </div>
+                </div>
+                
+                <div class="records-list" id="recordsList">
+                    <!-- 動態生成的申請記錄 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="form-section">
+                <div class="management-section">
+                    <h2 class="section-title">申請單類型管理</h2>
+                    
+                    <div class="management-controls">
+                        <input type="text" id="newType" placeholder="新增申請單類型">
+                        <button id="addTypeBtn">新增類型</button>
+                    </div>
+                    
+                    <div class="management-controls">
+                        <select id="typeToDelete">
+                            <option value="">-- 選擇要刪除的類型 --</option>
+                        </select>
+                        <button id="deleteTypeBtn">刪除類型</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="records-section">
+                <div class="management-section">
+                    <h2 class="section-title">申請項目管理</h2>
+                    
+                    <div class="management-controls">
+                        <select id="typeForItem">
+                            <option value="">-- 選擇申請單類型 --</option>
+                        </select>
+                        <input type="text" id="newItem" placeholder="新增申請項目">
+                        <button id="addItemBtn">新增項目</button>
+                    </div>
+                    
+                    <div class="management-controls">
+                        <select id="typeForDeleteItem">
+                            <option value="">-- 選擇申請單類型 --</option>
+                        </select>
+                        <select id="itemToDelete">
+                            <option value="">-- 選擇要刪除的項目 --</option>
+                        </select>
+                        <button id="deleteItemBtn">刪除項目</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化數據結構
+        let applicationData = {
+            types: [],
+            items: {},
+            records: []
+        };
+
+        // DOM元素
+        const employeeIdInput = document.getElementById('employeeId');
+        const applicationNoInput = document.getElementById('applicationNo');
+        const applicationTypeSelect = document.getElementById('applicationType');
+        const applicationItemsDiv = document.getElementById('applicationItems');
+        const submitBtn = document.getElementById('submitBtn');
+        const recordsList = document.getElementById('recordsList');
+        
+        // 搜尋相關元素
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const groupByEmployeeCheckbox = document.getElementById('groupByEmployee');
+        
+        // 導出相關元素
+        const exportTypeSelect = document.getElementById('exportType');
+        const exportBtn = document.getElementById('exportBtn');
+        
+        // 管理相關元素
+        const newTypeInput = document.getElementById('newType');
+        const addTypeBtn = document.getElementById('addTypeBtn');
+        const typeToDeleteSelect = document.getElementById('typeToDelete');
+        const deleteTypeBtn = document.getElementById('deleteTypeBtn');
+        
+        const typeForItemSelect = document.getElementById('typeForItem');
+        const newItemInput = document.getElementById('newItem');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const typeForDeleteItemSelect = document.getElementById('typeForDeleteItem');
+        const itemToDeleteSelect = document.getElementById('itemToDelete');
+        const deleteItemBtn = document.getElementById('deleteItemBtn');
+
+        // 從localStorage加載數據
+        function loadData() {
+            const savedData = localStorage.getItem('applicationData');
+            if (savedData) {
+                applicationData = JSON.parse(savedData);
+            } else {
+                // 初始化一些示例數據
+                applicationData.types = ['系統權限', '門禁權限', '設備權限'];
+                applicationData.items = {
+                    '系統權限': ['ERP系統', 'CRM系統', '財務系統', '人事系統', '採購系統', '庫存管理'],
+                    '門禁權限': ['辦公室區域', '實驗室區域', '倉庫區域', '會議室區域', '休息室區域', '資料中心'],
+                    '設備權限': ['印表機', '投影機', '會議室設備', '掃描器', '影印機', '傳真機']
+                };
+                
+                // 添加一些示例記錄
+                const now = new Date();
+                applicationData.records = [
+                    {
+                        employeeId: 'E001',
+                        applicationNo: 'APP2023001',
+                        applicationType: '系統權限',
+                        selectedItems: ['ERP系統', 'CRM系統'],
+                        timestamp: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+                    },
+                    {
+                        employeeId: 'E002',
+                        applicationNo: 'APP2023002',
+                        applicationType: '門禁權限',
+                        selectedItems: ['辦公室區域', '實驗室區域'],
+                        timestamp: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
+                    },
+                    {
+                        employeeId: 'E001',
+                        applicationNo: 'APP2023003',
+                        applicationType: '設備權限',
+                        selectedItems: ['印表機', '投影機'],
+                        timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
+                    }
+                ];
+                
+                saveData();
+            }
+            
+            updateTypeSelects();
+            updateItemsForSelectedType();
+        }
+
+        // 保存數據到localStorage
+        function saveData() {
+            localStorage.setItem('applicationData', JSON.stringify(applicationData));
+        }
+
+        // 更新所有類型下拉選單
+        function updateTypeSelects() {
+            // 清空所有類型下拉選單
+            const typeSelects = [
+                applicationTypeSelect,
+                typeToDeleteSelect,
+                typeForItemSelect,
+                typeForDeleteItemSelect
+            ];
+            
+            typeSelects.forEach(select => {
+                // 保存當前選擇的值
+                const currentValue = select.value;
+                
+                // 清空選項（保留第一個選項）
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+                
+                // 添加類型選項
+                applicationData.types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    select.appendChild(option);
+                });
+                
+                // 恢復之前的選擇（如果仍然存在）
+                if (applicationData.types.includes(currentValue)) {
+                    select.value = currentValue;
+                }
+            });
+            
+            // 更新項目下拉選單
+            updateItemDeleteSelect();
+        }
+
+        // 更新申請項目顯示
+        function updateItemsForSelectedType() {
+            const selectedType = applicationTypeSelect.value;
+            applicationItemsDiv.innerHTML = '';
+            
+            if (selectedType && applicationData.items[selectedType]) {
+                applicationData.items[selectedType].forEach(item => {
+                    const checkboxItem = document.createElement('div');
+                    checkboxItem.className = 'checkbox-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `item-${item}`;
+                    checkbox.value = item;
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `item-${item}`;
+                    label.textContent = item;
+                    
+                    checkboxItem.appendChild(checkbox);
+                    checkboxItem.appendChild(label);
+                    applicationItemsDiv.appendChild(checkboxItem);
+                });
+            } else {
+                applicationItemsDiv.innerHTML = '<div class="empty-message">請先選擇申請單類型</div>';
+            }
+        }
+
+        // 更新項目刪除下拉選單
+        function updateItemDeleteSelect() {
+            const selectedType = typeForDeleteItemSelect.value;
+            itemToDeleteSelect.innerHTML = '<option value="">-- 選擇要刪除的項目 --</option>';
+            
+            if (selectedType && applicationData.items[selectedType]) {
+                applicationData.items[selectedType].forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    option.textContent = item;
+                    itemToDeleteSelect.appendChild(option);
+                });
+            }
+        }
+
+        // 顯示申請記錄
+        function displayRecords(searchTerm = '', groupByEmployee = false) {
+            recordsList.innerHTML = '';
+            
+            let filteredRecords = applicationData.records;
+            
+            // 如果有搜尋條件，過濾記錄
+            if (searchTerm) {
+                filteredRecords = applicationData.records.filter(record => 
+                    record.employeeId.includes(searchTerm) || 
+                    record.applicationNo.includes(searchTerm) || 
+                    record.applicationType.includes(searchTerm) ||
+                    record.selectedItems.some(item => item.includes(searchTerm))
+                );
+            }
+            
+            if (filteredRecords.length === 0) {
+                recordsList.innerHTML = '<div class="empty-message">暫無申請記錄</div>';
+                return;
+            }
+            
+            // 按時間倒序顯示記錄
+            filteredRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // 如果選擇按工號分組
+            if (groupByEmployee) {
+                displayGroupedRecords(filteredRecords);
+            } else {
+                displayDetailedRecords(filteredRecords);
+            }
+        }
+
+        // 顯示詳細記錄（每筆記錄單獨顯示）
+        function displayDetailedRecords(records) {
+            records.forEach(record => {
+                const recordItem = document.createElement('div');
+                recordItem.className = 'record-item';
+                
+                const recordHeader = document.createElement('div');
+                recordHeader.className = 'record-header';
+                recordHeader.innerHTML = `
+                    <span>工號: ${record.employeeId}</span>
+                    <span>${new Date(record.timestamp).toLocaleString()}</span>
+                `;
+                
+                const recordDetails = document.createElement('div');
+                recordDetails.className = 'record-details';
+                recordDetails.innerHTML = `
+                    <p><strong>申請單號:</strong> ${record.applicationNo}</p>
+                    <p><strong>申請單類型:</strong> ${record.applicationType}</p>
+                    <p><strong>申請項目:</strong> ${record.selectedItems.join(', ')}</p>
+                `;
+                
+                recordItem.appendChild(recordHeader);
+                recordItem.appendChild(recordDetails);
+                recordsList.appendChild(recordItem);
+            });
+        }
+
+        // 顯示分組記錄（按工號分組）
+        function displayGroupedRecords(records) {
+            // 按工號分組
+            const groupedRecords = {};
+            records.forEach(record => {
+                if (!groupedRecords[record.employeeId]) {
+                    groupedRecords[record.employeeId] = [];
+                }
+                groupedRecords[record.employeeId].push(record);
+            });
+            
+            // 顯示每個工號的總結
+            Object.keys(groupedRecords).forEach(employeeId => {
+                const employeeRecords = groupedRecords[employeeId];
+                const recordItem = document.createElement('div');
+                recordItem.className = 'record-item employee-summary';
+                
+                const summaryHeader = document.createElement('div');
+                summaryHeader.className = 'summary-header';
+                summaryHeader.innerHTML = `
+                    <span>工號: ${employeeId}</span>
+                    <span class="application-count">${employeeRecords.length} 筆申請</span>
+                `;
+                
+                const summaryDetails = document.createElement('div');
+                summaryDetails.className = 'summary-details';
+                
+                // 統計申請類型和項目
+                const typeCount = {};
+                const itemCount = {};
+                
+                employeeRecords.forEach(record => {
+                    // 統計申請類型
+                    typeCount[record.applicationType] = (typeCount[record.applicationType] || 0) + 1;
+                    
+                    // 統計申請項目
+                    record.selectedItems.forEach(item => {
+                        itemCount[item] = (itemCount[item] || 0) + 1;
+                    });
+                });
+                
+                // 顯示申請類型統計
+                const typeList = Object.keys(typeCount).map(type => 
+                    `${type} (${typeCount[type]}次)`
+                ).join(', ');
+                
+                // 顯示申請項目統計
+                const itemList = Object.keys(itemCount).map(item => 
+                    `${item} (${itemCount[item]}次)`
+                ).join(', ');
+                
+                summaryDetails.innerHTML = `
+                    <p><strong>申請類型:</strong> ${typeList}</p>
+                    <p><strong>申請項目:</strong> ${itemList}</p>
+                    <p><strong>最近申請時間:</strong> ${new Date(employeeRecords[0].timestamp).toLocaleString()}</p>
+                `;
+                
+                recordItem.appendChild(summaryHeader);
+                recordItem.appendChild(summaryDetails);
+                recordsList.appendChild(recordItem);
+            });
+        }
+
+        // 匯出為Excel
+        function exportToExcel() {
+            const exportType = exportTypeSelect.value;
+            let recordsToExport = [];
+            
+            // 根據匯出類型選擇記錄
+            switch(exportType) {
+                case 'all':
+                    recordsToExport = applicationData.records;
+                    break;
+                case 'search':
+                    const searchTerm = searchInput.value.trim();
+                    if (searchTerm) {
+                        recordsToExport = applicationData.records.filter(record => 
+                            record.employeeId.includes(searchTerm) || 
+                            record.applicationNo.includes(searchTerm) || 
+                            record.applicationType.includes(searchTerm) ||
+                            record.selectedItems.some(item => item.includes(searchTerm))
+                        );
+                    } else {
+                        recordsToExport = applicationData.records;
+                    }
+                    break;
+                case 'lastMonth':
+                    const oneMonthAgo = new Date();
+                    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                    recordsToExport = applicationData.records.filter(record => 
+                        new Date(record.timestamp) >= oneMonthAgo
+                    );
+                    break;
+            }
+            
+            if (recordsToExport.length === 0) {
+                alert('沒有符合條件的記錄可以匯出！');
+                return;
+            }
+            
+            // 準備Excel數據
+            const excelData = [
+                ['工號', '申請單號', '申請單類型', '申請項目', '申請時間']
+            ];
+            
+            recordsToExport.forEach(record => {
+                excelData.push([
+                    record.employeeId,
+                    record.applicationNo,
+                    record.applicationType,
+                    record.selectedItems.join(', '),
+                    new Date(record.timestamp).toLocaleString('zh-TW')
+                ]);
+            });
+            
+            // 創建工作簿和工作表
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '申請記錄');
+            
+            // 生成檔案名稱
+            const fileName = `申請記錄_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            
+            // 匯出Excel檔案
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // 事件監聽器
+        applicationTypeSelect.addEventListener('change', updateItemsForSelectedType);
+        
+        submitBtn.addEventListener('click', function() {
+            const employeeId = employeeIdInput.value.trim();
+            const applicationNo = applicationNoInput.value.trim();
+            const applicationType = applicationTypeSelect.value;
+            
+            if (!employeeId || !applicationNo || !applicationType) {
+                alert('請填寫完整的申請信息！');
+                return;
+            }
+            
+            // 獲取選中的項目
+            const selectedItems = [];
+            const checkboxes = applicationItemsDiv.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedItems.push(checkbox.value);
+            });
+            
+            if (selectedItems.length === 0) {
+                alert('請至少選擇一個申請項目！');
+                return;
+            }
+            
+            // 創建新記錄
+            const newRecord = {
+                employeeId,
+                applicationNo,
+                applicationType,
+                selectedItems,
+                timestamp: new Date().toISOString()
+            };
+            
+            applicationData.records.push(newRecord);
+            saveData();
+            displayRecords(searchInput.value, groupByEmployeeCheckbox.checked);
+            
+            // 清空表單
+            employeeIdInput.value = '';
+            applicationNoInput.value = '';
+            applicationTypeSelect.value = '';
+            updateItemsForSelectedType();
+            
+            alert('申請提交成功！');
+        });
+
+        // 搜尋功能
+        searchBtn.addEventListener('click', function() {
+            displayRecords(searchInput.value, groupByEmployeeCheckbox.checked);
+        });
+        
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            displayRecords('', groupByEmployeeCheckbox.checked);
+        });
+        
+        groupByEmployeeCheckbox.addEventListener('change', function() {
+            displayRecords(searchInput.value, groupByEmployeeCheckbox.checked);
+        });
+
+        // 匯出功能
+        exportBtn.addEventListener('click', exportToExcel);
+
+        // 類型管理事件
+        addTypeBtn.addEventListener('click', function() {
+            const newType = newTypeInput.value.trim();
+            
+            if (!newType) {
+                alert('請輸入申請單類型名稱！');
+                return;
+            }
+            
+            if (applicationData.types.includes(newType)) {
+                alert('該申請單類型已存在！');
+                return;
+            }
+            
+            applicationData.types.push(newType);
+            applicationData.items[newType] = [];
+            saveData();
+            updateTypeSelects();
+            
+            newTypeInput.value = '';
+            alert(`成功新增申請單類型: ${newType}`);
+        });
+
+        deleteTypeBtn.addEventListener('click', function() {
+            const typeToDelete = typeToDeleteSelect.value;
+            
+            if (!typeToDelete) {
+                alert('請選擇要刪除的申請單類型！');
+                return;
+            }
+            
+            if (confirm(`確定要刪除申請單類型 "${typeToDelete}" 及其所有項目嗎？`)) {
+                // 從類型列表中刪除
+                applicationData.types = applicationData.types.filter(type => type !== typeToDelete);
+                
+                // 從項目列表中刪除
+                delete applicationData.items[typeToDelete];
+                
+                saveData();
+                updateTypeSelects();
+                updateItemsForSelectedType();
+                
+                alert(`成功刪除申請單類型: ${typeToDelete}`);
+            }
+        });
+
+        // 項目管理事件
+        typeForItemSelect.addEventListener('change', function() {
+            // 當選擇類型時，更新項目輸入框的提示
+            const selectedType = typeForItemSelect.value;
+            if (selectedType) {
+                newItemInput.placeholder = `新增 ${selectedType} 的申請項目`;
+            } else {
+                newItemInput.placeholder = '新增申請項目';
+            }
+        });
+
+        typeForDeleteItemSelect.addEventListener('change', updateItemDeleteSelect);
+
+        addItemBtn.addEventListener('click', function() {
+            const selectedType = typeForItemSelect.value;
+            const newItem = newItemInput.value.trim();
+            
+            if (!selectedType) {
+                alert('請先選擇申請單類型！');
+                return;
+            }
+            
+            if (!newItem) {
+                alert('請輸入申請項目名稱！');
+                return;
+            }
+            
+            if (!applicationData.items[selectedType]) {
+                applicationData.items[selectedType] = [];
+            }
+            
+            if (applicationData.items[selectedType].includes(newItem)) {
+                alert('該申請項目已存在！');
+                return;
+            }
+            
+            applicationData.items[selectedType].push(newItem);
+            saveData();
+            
+            // 如果當前選擇的類型與項目添加的類型相同，更新顯示
+            if (applicationTypeSelect.value === selectedType) {
+                updateItemsForSelectedType();
+            }
+            
+            updateItemDeleteSelect();
+            newItemInput.value = '';
+            alert(`成功新增申請項目: ${newItem}`);
+        });
+
+        deleteItemBtn.addEventListener('click', function() {
+            const selectedType = typeForDeleteItemSelect.value;
+            const itemToDelete = itemToDeleteSelect.value;
+            
+            if (!selectedType || !itemToDelete) {
+                alert('請選擇要刪除的申請項目！');
+                return;
+            }
+            
+            if (confirm(`確定要刪除申請項目 "${itemToDelete}" 嗎？`)) {
+                applicationData.items[selectedType] = applicationData.items[selectedType].filter(
+                    item => item !== itemToDelete
+                );
+                
+                saveData();
+                
+                // 如果當前選擇的類型與項目刪除的類型相同，更新顯示
+                if (applicationTypeSelect.value === selectedType) {
+                    updateItemsForSelectedType();
+                }
+                
+                updateItemDeleteSelect();
+                alert(`成功刪除申請項目: ${itemToDelete}`);
+            }
+        });
+
+        // 初始化應用
+        loadData();
+        displayRecords();
+    </script>
+</body>
+</html>
